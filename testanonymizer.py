@@ -141,52 +141,68 @@ IMPORTANT: Provide ONLY the anonymized replacement value. No quotes, explanation
         return prompt
     
     def detect_data_type(self, value: str) -> str:
-        """Detect the type of data to help with anonymization"""
+        """Detect the type of data to help with anonymization (improved version)"""
         if pd.isna(value):
             return "empty"
-        
         value_str = str(value).strip()
-        
+        lower_val = value_str.lower()
+
         # Email detection
-        if re.match(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', value_str):
+        if re.match(r"\b[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\b", value_str):
             return "email"
-        
-        # Phone number detection
-        if re.match(r'[\+]?[\d\s\-\(\)\.]{10,}', value_str):
+
+        # Phone (US, Canada, Europe, with or without country code)
+        phone_patterns = [
+            r"^\+?(\d[\d\-\.\s\(\)]{7,}\d)$",                 # +1 555-555-5555, +44 20 7123 1234
+            r"^\(?\d{3,4}\)?[\s\-\.]?\d{3,4}[\s\-\.]?\d{3,4}$" # (555) 555-5555, 020 7123 1234
+        ]
+        if any(re.match(p, value_str) for p in phone_patterns):
             return "phone"
-        
-        # Name detection (First Last or First Middle Last)
-        if re.match(r'^[A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?$', value_str):
+
+        # International names: support accented characters, common non-English names
+        if re.match(r"^[A-ZÀ-ÿ][a-zà-ÿ'\-]+(\s+[A-ZÀ-ÿ][a-zà-ÿ'\-]+)+$", value_str):
             return "person_name"
-        
-        # Company/Organization name
-        if any(keyword in value_str.lower() for keyword in ['corp', 'inc', 'ltd', 'company', 'llc', 'corporation', 'group']):
+
+        # Company/Organization names (expanded keywords)
+        company_keywords = [
+            'corp', 'inc', 'ltd', 'company', 'llc', 'corporation', 'group',
+            'gmbh', 'sarl', 'sa', 'plc', 'pte', 'ag', 'spa', 'oy', 'ab'
+        ]
+        if any(kw in lower_val for kw in company_keywords):
             return "company_name"
-        
-        # Job title detection
-        if any(keyword in value_str.lower() for keyword in ['director', 'manager', 'officer', 'head', 'lead', 'coordinator', 'specialist']):
+
+        # Job title detection (expanded)
+        job_keywords = [
+            'director', 'manager', 'officer', 'head', 'lead', 'coordinator', 'specialist',
+            'president', 'chief', 'analyst', 'consultant', 'engineer', 'developer', 'vice', 'vp'
+        ]
+        if any(kw in lower_val for kw in job_keywords):
             return "job_title"
-        
-        # Address detection
-        if any(keyword in value_str.lower() for keyword in ['street', 'avenue', 'road', 'drive', 'suite', 'floor']):
+
+        # Address detection (expanded)
+        address_keywords = [
+            'street', 'st.', 'avenue', 'ave', 'road', 'rd', 'drive', 'dr', 'suite', 'floor',
+            'blvd', 'lane', 'ln', 'way', 'building', 'block', 'apartment', 'apt', 'unit'
+        ]
+        if any(kw in lower_val for kw in address_keywords):
             return "address"
-        
-        # City/Location detection
-        if re.match(r'^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$', value_str) and len(value_str) < 30:
+
+        # City/Location detection (allow some special characters, support longer names)
+        if re.match(r"^[A-ZÀ-ÿ][a-zà-ÿ'\-\s]{2,50}$", value_str) and len(value_str) < 50:
             return "location"
-        
-        # Check for common patterns
-        if re.match(r'^\d+$', value_str):
+
+        # Numeric ID
+        if re.match(r"^\d+$", value_str):
             return "numeric_id"
-        elif re.match(r'^[A-Z0-9_]+$', value_str):
+        elif re.match(r"^[A-Z0-9_]+$", value_str):
             return "code_identifier"
         elif len(value_str) > 30:
             return "description"
-        elif any(keyword in value_str.lower() for keyword in ['platform', 'system', 'software']):
+        elif any(kw in lower_val for kw in ['platform', 'system', 'software']):
             return "product_name"
-        elif any(keyword in value_str.lower() for keyword in ['department', 'division', 'center', 'professional']):
+        elif any(kw in lower_val for kw in ['department', 'division', 'center', 'professional']):
             return "department"
-        elif any(keyword in value_str.lower() for keyword in ['operations', 'management', 'core']):
+        elif any(kw in lower_val for kw in ['operations', 'management', 'core']):
             return "business_unit"
         else:
             return "general_text"

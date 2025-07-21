@@ -108,35 +108,50 @@ class TRAzureDataAnonymizer:
         context_info = f"Context samples: {context_samples[:3]}" if context_samples else ""
         
         prompt = f"""
-You are a professional data anonymization expert. Your task is to replace the given value with a semantically similar but completely anonymized alternative.
+        I have an Excel file containing multiple columns and rows filled with personal and sensitive data. I need to anonymize this file before sharing it with a third-party vendor. Please perform the following data manipulation and anonymization steps on my Excel file:
+        1. General Requirements
+        Replace all original data with anonymized data.
+        Ensure that the anonymized data maintains the same format, structure, and data types as the original data.
+        The anonymized file should contain NO original personal or sensitive information.
+        The output Excel file must have the same number of rows and columns as the original.
+        2. Column-specific Instructions
+        A. Country Names
+        For any column containing country names (e.g., labeled "Country"), replace each unique country with a different random country name.
+        Every instance of the same original country should be replaced with the same new country throughout the file (i.e., consistent mapping).
+        Do not use the original country anywhere in the output.
+        B. Names of People
+        For columns containing personal names (e.g., labeled "Name", "Full Name", "First Name", "Last Name"), replace each name with a randomly generated, plausible name.
+        Each unique original name should always be replaced with the same anonymized name throughout the dataset.
+        Ensure no original name is present in the output.
+        C. Email Addresses
+        For any column containing email addresses (e.g., labeled "Email", "Email Address"), replace each email with a randomly generated but plausible email address.
+        The format should be consistent with real email addresses (e.g., firstname.lastname@randomdomain.com).
+        Each unique original email should map to a unique anonymized email (consistent mapping).
+        D. Account Numbers and Other Numeric Identifiers
+        For columns containing account numbers or similar numeric identifiers, replace each unique number with a random number of the same length and format.
+        Ensure that the same original number is always replaced with the same anonymized number throughout the file (consistent mapping).
+        The anonymized numbers should not be easily reversible or guessable.
+        E. Any Other Sensitive Information
+        For any other columns containing potentially sensitive data (e.g., addresses, phone numbers, IDs, etc.), anonymize the data by replacing it with plausible but random values of the same type and format.
+        Consistent mapping should be used where appropriate (i.e., same input → same output throughout the file).
+        3. Data Integrity
+        The anonymized data should not reveal any information from the original dataset.
+        The output should be fully usable for processing by the vendor, i.e., formats and data types should be preserved.
+        No personally identifiable information (PII) or sensitive data from the original should remain.
+        4. Deliverables
+        Return the output in the form of a csv file format so that I can copy paste it in my excel file.
+        5. Additional Notes
+        Do not use any publicly available or real information for replacement; use randomly generated data only.
+        Maintain referential integrity: if two or more fields are related (e.g., "Name" and "Email"), ensure the mapping is logical (e.g., anonymized email matches anonymized name).
 
-CRITICAL REQUIREMENTS:
-1. The replacement must be semantically similar (same category/type as original)
-2. The replacement must be completely fictional - no real names, companies, locations, or contact information
-3. Maintain the same format, structure, and approximate length
-4. Be consistent - same input should always produce same output
-5. The replacement should be professional and business-appropriate
-6. Avoid any identifiable information or real-world references
-7. Change any numeric identifiers to new, unique values
+        INPUT DETAILS:
+        - Original value: "{value}"
+        - Column: "{column_name}"
+        - Data type: {data_type}
+        - {context_info}
 
-INPUT DETAILS:
-- Original value: "{value}"
-- Column: "{column_name}"
-- Data type: {data_type}
-- {context_info}
-
-ANONYMIZATION EXAMPLES:
-- "John Smith" → "Alex Johnson"
-- "Thomson Reuters" → "Legal Solutions Corp"
-- "Toronto" → "Vancouver"
-- "john.smith@tr.com" → "alex.johnson@company.com"
-- "416-555-1234" → "604-555-5678"
-- "Director of Legal Affairs" → "Head of Legal Operations"
-- "PCO WL Digital Platforms" → "Digital Services Platform"
-- "Westlaw" → "LegalPro"
-
-IMPORTANT: Provide ONLY the anonymized replacement value. No quotes, explanations, or additional text.
-"""
+        IMPORTANT: Provide ONLY the anonymized replacement value. No quotes, explanations, or additional text.
+        """
         
         return prompt
     

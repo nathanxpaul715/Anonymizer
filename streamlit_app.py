@@ -9,34 +9,177 @@ from anonymizer import TRAzureDataAnonymizer
 
 # Set page config
 st.set_page_config(
-    page_title="Azure OpenAI Data Anonymizer",
+    page_title="Thomson Reuters Data Anonymizer",
     page_icon="🔒",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS
+# Custom CSS with White background and Orange/Black accents
 st.markdown("""
 <style>
+/* Hide sidebar completely */
+.css-1d391kg {
+    display: none;
+}
+
+/* White background theme */
+.stApp {
+    background-color: #FFFFFF;
+}
+
 .main-header {
     font-size: 2.5rem;
     font-weight: bold;
     text-align: center;
     margin-bottom: 2rem;
-    color: #1e3a8a;
+    color: #ce4d00;
 }
+
 .sub-header {
     font-size: 1.5rem;
     font-weight: bold;
     margin: 1rem 0;
-    color: #3b82f6;
+    color: #000000;
+    border-bottom: 2px solid #ce4d00;
+    padding-bottom: 0.5rem;
 }
+
 .info-box {
-    background-color: #f0f9ff;
-    border: 1px solid #bfdbfe;
+    background: linear-gradient(135deg, #ce4d00 0%, #b84300 100%);
+    border: 1px solid #ce4d00;
     border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+/* Style buttons */
+.stButton > button {
+    background: linear-gradient(135deg, #ce4d00 0%, #b84300 100%);
+    color: #FFFFFF;
+    border: none;
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+.stButton > button:hover {
+    background: linear-gradient(135deg, #b84300 0%, #ce4d00 100%);
+    color: #FFFFFF;
+}
+
+/* Style tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: #F5F5F5;
+    color: #000000;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    border: 1px solid #E0E0E0;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #ce4d00 0%, #b84300 100%);
+    color: #FFFFFF;
+    border: 1px solid #ce4d00;
+}
+
+/* Style text and metrics */
+.stMarkdown, .stText {
+    color: #000000;
+}
+
+.metric-container {
+    background-color: #F8F9FA;
+    border: 1px solid #ce4d00;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+/* Style dataframes */
+.stDataFrame {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+}
+
+/* Style file uploader */
+.stFileUploader {
+    background-color: #F8F9FA;
+    border: 2px dashed #ce4d00;
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+/* Style multiselect */
+.stMultiSelect > div > div {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    color: #000000;
+}
+
+/* Style selectbox */
+.stSelectbox > div > div {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+}
+
+/* Logo container - centered */
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+}
+
+/* Success/Error messages */
+.stSuccess {
+    background-color: #D4F4DD !important;
+    border: 1px solid #28A745 !important;
+    color: #155724 !important;
+}
+
+.stError {
+    background-color: #F8D7DA !important;
+    border: 1px solid #DC3545 !important;
+    color: #721C24 !important;
+}
+
+.stInfo {
+    background-color: #CCE7FF !important;
+    border: 1px solid #007BFF !important;
+    color: #004085 !important;
+}
+
+/* Progress bar */
+.stProgress .st-bo {
+    background-color: #ce4d00 !important;
+}
+
+/* Metrics styling */
+[data-testid="metric-container"] {
+    background-color: #F8F9FA;
+    border: 1px solid #ce4d00;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+[data-testid="metric-container"] > div {
+    color: #000000;
+}
+
+[data-testid="metric-container"] [data-testid="metric-value"] {
+    color: #ce4d00;
+    font-weight: bold;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -57,80 +200,36 @@ def initialize_session_state():
 def main():
     initialize_session_state()
     
-    st.markdown('<div class="main-header">🔒 Azure OpenAI Data Anonymizer</div>', unsafe_allow_html=True)
-    st.markdown("Securely anonymize sensitive data using Thomson Reuters Azure OpenAI")
+    # Display Thomson Reuters logo - CENTERED
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image("f696ddc8-1ea8-4d82-87e8-33030eb90a19.jpg", use_container_width=True)
     
-    # Sidebar configuration
-    with st.sidebar:
-        st.markdown('<div class="sub-header">⚙️ Configuration</div>', unsafe_allow_html=True)
-        
-        # Azure OpenAI Configuration
-        workspace_id = st.text_input(
-            "Workspace ID", 
-            value=os.getenv("WORKSPACE_ID", "AnonymizerW5XR"),
-            help="Your Thomson Reuters workspace ID"
-        )
-        
-        model_name = st.text_input(
-            "Model Name", 
-            value=os.getenv("MODEL_NAME", "gpt-4o"),
-            help="Azure OpenAI model to use"
-        )
-        
-        asset_id = st.text_input(
-            "Asset ID", 
-            value=os.getenv("ASSET_ID", "208321"),
-            help="Thomson Reuters asset ID"
-        )
-        
-        # Advanced settings
-        with st.expander("🔧 Advanced Settings"):
-            min_request_interval = st.slider(
-                "Request Interval (seconds)", 
-                min_value=0.1, 
-                max_value=2.0, 
-                value=0.2, 
-                step=0.1,
-                help="Minimum time between API requests"
-            )
-            
-            max_tokens = st.slider(
-                "Max Tokens", 
-                min_value=50, 
-                max_value=500, 
-                value=100,
-                help="Maximum tokens for LLM response"
-            )
-            
-            temperature = st.slider(
-                "Temperature", 
-                min_value=0.0, 
-                max_value=1.0, 
-                value=0.0,
-                help="LLM creativity level (0 = deterministic)"
-            )
+    st.markdown('<div class="main-header">🔒 Data Anonymizer</div>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; color: #666666; font-size: 1.2rem;">Securely anonymize sensitive data using advanced AI technology</p>', unsafe_allow_html=True)
     
-    # Initialize anonymizer with current settings
-    if (st.session_state.anonymizer is None or 
-        st.session_state.anonymizer.workspace_id != workspace_id or
-        st.session_state.anonymizer.model_name != model_name or
-        st.session_state.anonymizer.asset_id != asset_id):
-        
-        with st.spinner("🔄 Initializing Azure OpenAI connection..."):
+    # Initialize anonymizer with default settings (hidden from user)
+    if st.session_state.anonymizer is None:
+        with st.spinner("🔄 Initializing AI connection..."):
             try:
-                # Set environment variables for the anonymizer
-                os.environ["MIN_REQUEST_INTERVAL"] = str(min_request_interval)
-                os.environ["MAX_TOKENS"] = str(max_tokens)
-                os.environ["TEMPERATURE"] = str(temperature)
+                # Use default/environment values
+                workspace_id = os.getenv("WORKSPACE_ID", "AnonymizerW5XR")
+                model_name = os.getenv("MODEL_NAME", "gpt-4o")
+                asset_id = os.getenv("ASSET_ID", "208321")
+                
+                # Set default environment variables
+                os.environ.setdefault("MIN_REQUEST_INTERVAL", "0.2")
+                os.environ.setdefault("MAX_TOKENS", "100")
+                os.environ.setdefault("TEMPERATURE", "0.0")
                 
                 st.session_state.anonymizer = TRAzureDataAnonymizer(
                     workspace_id=workspace_id,
                     model_name=model_name,
                     asset_id=asset_id
                 )
-                st.success("✅ Azure OpenAI connection established!")
+                st.success("✅ AI connection established!")
             except Exception as e:
-                st.error(f"❌ Failed to initialize Azure OpenAI: {e}")
+                st.error(f"❌ Failed to initialize AI connection: {e}")
                 return
     
     # Main content tabs
@@ -229,7 +328,7 @@ def main():
                     st.write(f"• **{col}**: {unique_count} unique values")
                 
                 total_unique_values = sum(st.session_state.df[col].nunique() for col in selected_columns)
-                estimated_time = total_unique_values * min_request_interval / 60
+                estimated_time = total_unique_values * 0.2 / 60  # Using default interval
                 st.write(f"• **⏱️ Estimated processing time**: ~{estimated_time:.1f} minutes")
                 st.markdown('</div>', unsafe_allow_html=True)
         else:
@@ -239,14 +338,13 @@ def main():
         if st.session_state.df is not None and st.session_state.columns_to_anonymize:
             st.markdown('<div class="sub-header">🚀 Anonymization Process</div>', unsafe_allow_html=True)
             
-            # Processing summary
+            # Processing summary (without sensitive details)
             st.markdown('<div class="info-box">', unsafe_allow_html=True)
             st.write("**📋 Processing Summary:**")
             st.write(f"• **File**: {uploaded_file.name if uploaded_file else 'Unknown'}")
             st.write(f"• **Rows**: {len(st.session_state.df):,}")
             st.write(f"• **Columns to anonymize**: {len(st.session_state.columns_to_anonymize)}")
-            st.write(f"• **Model**: {model_name}")
-            st.write(f"• **Workspace**: {workspace_id}")
+            st.write(f"• **Status**: Ready for processing")
             st.markdown('</div>', unsafe_allow_html=True)
             
             # Start anonymization
@@ -256,7 +354,7 @@ def main():
                 
                 try:
                     # Process the anonymization
-                    with st.spinner("🔄 Processing data with Azure OpenAI..."):
+                    with st.spinner("🔄 Processing data with AI..."):
                         st.session_state.anonymized_df = st.session_state.anonymizer.anonymize_dataframe(
                             st.session_state.df,
                             columns_to_anonymize=st.session_state.columns_to_anonymize,
@@ -267,16 +365,16 @@ def main():
                     status_text.success("✅ Anonymization completed successfully!")
                     st.session_state.processing_complete = True
                     
-                    # Show statistics
+                    # Show statistics (simplified)
                     stats = st.session_state.anonymizer
                     col1, col2, col3, col4 = st.columns(4)
                     
                     with col1:
-                        st.metric("🔄 Total Requests", stats.total_requests)
+                        st.metric("🔄 Processed Items", stats.total_requests)
                     with col2:
                         st.metric("💾 Cache Hits", stats.cache_hits)
                     with col3:
-                        st.metric("❌ Failed Requests", len(stats.failed_requests))
+                        st.metric("❌ Failed Items", len(stats.failed_requests))
                     with col4:
                         success_rate = ((stats.total_requests - len(stats.failed_requests)) / max(stats.total_requests, 1) * 100)
                         st.metric("✅ Success Rate", f"{success_rate:.1f}%")
@@ -311,14 +409,14 @@ def main():
                 st.session_state.anonymized_df.to_csv(csv_buffer, index=False)
                 csv_data = csv_buffer.getvalue()
                 
-                # Prepare mappings data
+                # Prepare mappings data (without sensitive API details)
                 mappings_data = {
                     'mappings': dict(st.session_state.anonymizer.mappings),
-                    'llm_cache': st.session_state.anonymizer.llm_cache,
                     'statistics': {
                         'total_requests': st.session_state.anonymizer.total_requests,
                         'cache_hits': st.session_state.anonymizer.cache_hits,
-                        'failed_requests': len(st.session_state.anonymizer.failed_requests)
+                        'failed_requests': len(st.session_state.anonymizer.failed_requests),
+                        'timestamp': pd.Timestamp.now().isoformat()
                     }
                 }
                 mappings_json = json.dumps(mappings_data, indent=2)
